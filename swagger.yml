@@ -1,0 +1,298 @@
+---
+swagger: '2.0'
+info:
+  description: Node-jwt module. Manages users, sessions and permissions.
+  version: 1.0.0
+  title: node-jwt
+  contact:
+    email: hector.gomez.varela@gmail.com
+  license:
+    name: GNU General Public License
+    url: https://www.gnu.org/licenses/gpl.html
+basePath: '/api/auth'
+schemes:
+- http
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: |
+     For accessing the API a valid JWT token must be passed in all the queries in
+     the 'Authorization' header.
+      
+paths:
+  /user:
+    get:
+      summary: User profile   
+      security:
+        - Bearer: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        200:
+          description: User info
+          schema:
+            $ref: '#/definitions/SimpleUser'
+        403:
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'   
+    post:
+      summary: Register a new user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: User to register
+          required: true
+          schema:
+            '$ref': '#/definitions/User'
+      responses:
+        200:
+          description: Authentication token
+          schema:
+            $ref: '#/definitions/AuthToken'
+        400:
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      summary: Delete a user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            format: uuid
+          required: true        
+        - in: body
+          name: email
+          description: User email to delete
+          required: true
+          schema:
+            $ref: '#/definitions/SimpleEmail'
+      responses:
+        200:
+          description: Deleted user info
+          schema:
+            $ref: '#/definitions/SimpleUser'
+        400:
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error'
+        403:
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+
+  /login:
+    post:
+      summary: Log in  
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: User to log in
+          required: true
+          schema:
+            '$ref': '#/definitions/User'
+      responses:
+        200:
+          description: Authentication token
+          schema:
+            $ref: '#/definitions/AuthToken'
+        401:
+          description: Invalid login credentials
+          schema:
+            $ref: '#/definitions/Error'     
+       
+  /logout:
+    get:
+      summary: Log out  
+      security:
+        - Bearer: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        200:
+          description: Authentication token
+          schema:
+            $ref: '#/definitions/AuthToken'
+  
+  /password-reset:
+    post:
+      summary: Request a password reset for the current user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      parameters:
+        - in: body
+          name: body
+          description: Email of the user who requests a password reset
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+      responses:
+        200:
+          description: Info about the sent email containing the reset token
+          schema:
+            type: object
+        400:
+          description: Invalid email provided
+          schema:
+            $ref: '#/definitions/Error'
+
+  /password-change:
+    post:
+      summary: Change user password by reset token 
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      parameters:
+        - in: body
+          name: body
+          description: User for password change and reset token provided
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+              token:
+                type: string
+      responses:
+        200:
+          description: User object affected by the change
+          schema:
+            $ref: '#/definitions/SimpleUser'
+        400:
+          description: Invalid email provided
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Error setting the new password
+          schema:
+            $ref: '#/definitions/Error'
+    patch:
+      summary: Change user password by providing old password 
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            format: uuid
+          required: true   
+        - in: body
+          name: body
+          description: Email for password change and both old and new passwords
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              oldPassword:
+                type: string
+              newPassword:
+                type: string
+      responses:
+        200:
+          description: Authentication token
+          schema:
+            $ref: '#/definitions/AuthToken'
+        403:
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  AuthToken:
+    type: object
+    properties:
+      auth:
+        type: boolean
+      token:
+        type: string
+  Error:
+    type: object
+    properties:
+      error:
+        type: string
+  SimpleId:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+  SimpleEmail:
+    type: object
+    properties:
+      email:
+        type: string
+  User:
+    type: object
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      roles:
+        type: array
+        items:
+          type: string
+  SimpleUser:
+    type: object
+    properties:
+      email:
+        type: string
+      roles:
+        type: array
+        items:
+          type: string
+...

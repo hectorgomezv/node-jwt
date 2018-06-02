@@ -1,0 +1,16 @@
+{
+    "env": {
+        "es6": true,
+        "node": true,
+        "mocha": true
+    },
+    "extends": "airbnb-base",
+    "plugins": [
+        "mocha",
+        "chai-expect"
+    ],
+    "rules": {
+        "mocha/no-exclusive-tests": "error",
+        "no-underscore-dangle": "off"
+    }
+}
